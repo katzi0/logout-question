@@ -10,7 +10,7 @@ import crypto from 'node:crypto';
 const PORT = 3000;
 const ACCESS_TTL_SECONDS = 10 * 60;
 const COOKIE_NAME = 'access';
-const SECRET = crypto.randomBytes(32); // new secret on every server start
+const SECRET = crypto.randomBytes(32).toString('hex'); // new secret on every server start
 
 // ---------------------------------------------------------------------------
 // Seed data
@@ -48,24 +48,39 @@ function freshDevState() {
 // ---------------------------------------------------------------------------
 // Helpers: passwords, JWT, cookies
 // ---------------------------------------------------------------------------
+// Only crypto.randomBytes and crypto.createHmac are used here, because StackBlitz's
+// in-browser Node runtime doesn't support everything (scrypt, base64url, timingSafeEqual).
+
+// Mock password hashing: salted HMAC-SHA256. A real server uses a slow hash (bcrypt / Argon2id).
 function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
-  const hash = crypto.scryptSync(password, salt, 32).toString('hex');
+  const hash = crypto.createHmac('sha256', salt).update(password).digest('hex');
   return `${salt}:${hash}`;
 }
 
 function verifyPassword(password, stored) {
   const [salt, hash] = stored.split(':');
-  const candidate = crypto.scryptSync(password, salt, 32);
-  return crypto.timingSafeEqual(candidate, Buffer.from(hash, 'hex'));
+  return safeEqual(crypto.createHmac('sha256', salt).update(password).digest('hex'), hash);
 }
 
-const b64url = (input) => Buffer.from(input).toString('base64url');
+// Constant-time string comparison.
+function safeEqual(a, b) {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+const toB64url = (b64) => b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const b64url = (text) => toB64url(Buffer.from(text, 'utf8').toString('base64'));
+const fromB64url = (s) =>
+  Buffer.from(s.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (s.length % 4)) % 4), 'base64').toString('utf8');
+const hmac = (data) => toB64url(crypto.createHmac('sha256', SECRET).update(data).digest('base64'));
+const randomId = () => crypto.randomBytes(16).toString('hex');
 
 function signJwt(payload) {
   const header = b64url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
   const body = b64url(JSON.stringify(payload));
-  const signature = crypto.createHmac('sha256', SECRET).update(`${header}.${body}`).digest('base64url');
-  return `${header}.${body}.${signature}`;
+  return `${header}.${body}.${hmac(`${header}.${body}`)}`;
 }
 
 function verifyJwt(token) {
@@ -73,12 +88,9 @@ function verifyJwt(token) {
   const parts = token.split('.');
   if (parts.length !== 3) return null;
   const [header, body, signature] = parts;
-  const expected = crypto.createHmac('sha256', SECRET).update(`${header}.${body}`).digest('base64url');
-  const a = Buffer.from(signature);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  if (!safeEqual(signature, hmac(`${header}.${body}`))) return null;
   try {
-    const payload = JSON.parse(Buffer.from(body, 'base64url').toString());
+    const payload = JSON.parse(fromB64url(body));
     if (typeof payload.exp !== 'number' || payload.exp * 1000 < Date.now()) return null;
     return payload;
   } catch {
@@ -156,7 +168,7 @@ api.post('/auth/login', (req, res) => {
     return res.status(401).json({ error: 'Wrong username or password' });
   }
 
-  const sid = crypto.randomUUID();
+  const sid = randomId();
   const now = Date.now();
   sessions.set(sid, { sid, userId: user.id, createdAt: now, lastSeenAt: now, revokedAt: null });
 
