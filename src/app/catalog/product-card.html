@@ -1,0 +1,25 @@
+<article class="card">
+  <div class="thumb" [style.background]="product().thumbnail.tint" aria-hidden="true">
+    <span>{{ product().thumbnail.emoji }}</span>
+  </div>
+
+  <div class="body">
+    <h2 class="title">{{ product().title }}</h2>
+    <p class="brand">by {{ product().brand }}</p>
+    <app-rating [value]="product().rating" [count]="product().reviewCount" />
+
+    <p class="price">{{ product().price | currency: product().currency }}</p>
+
+    <!-- TODO: type-specific details -->
+    <div class="details"></div>
+
+    <div class="meta">
+      @if (product().fastDelivery) {
+        <span class="fast">Fast delivery · Tomorrow</span>
+      }
+      <span class="stock" [attr.data-kind]="stockLabel().kind">{{ stockLabel().text }}</span>
+    </div>
+
+    <button class="add" type="button" [disabled]="product().stock === 0" (click)="addToCart()">Add to cart</button>
+  </div>
+</article>
