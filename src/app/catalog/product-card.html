@@ -8,10 +8,12 @@
     <p class="brand">by {{ product().brand }}</p>
     <app-rating [value]="product().rating" [count]="product().reviewCount" />
 
-    <p class="price">{{ product().price | currency: product().currency }}</p>
+    <p class="price">{{ displayPrice() | currency: product().currency }}</p>
 
-    <!-- TODO: type-specific details -->
-    <div class="details"></div>
+    <!-- Type-specific details: the registry picks the component, the card stays the same for every type. -->
+    <div class="details">
+      <ng-container *ngComponentOutlet="detailsComponent(); inputs: detailsInputs()" />
+    </div>
 
     <div class="meta">
       @if (product().fastDelivery) {

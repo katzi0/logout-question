@@ -1,3 +1,6 @@
+> **Interviewer reference solution — don't share this branch with candidates.**
+> The candidate version is the `catalog` branch. What this solution shows and how to use it: [`SOLUTION.md`](SOLUTION.md).
+
 # Catalog exercise
 
 **Marketly** is an online store. The catalog page shows a grid of product cards.
