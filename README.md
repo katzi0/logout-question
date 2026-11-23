@@ -1,4 +1,4 @@
-# Catalog exercise
+# Catalog exercise (React)
 
 **Marketly** is an online store. The catalog page shows a grid of product cards.
 
@@ -16,27 +16,27 @@ The catalog keeps growing: other teams add new product types all the time.
 1. **Explain your approach first** (about 5 minutes). How will the card show different information for each product type? How do you model the data? What happens when a new type is added?
 2. **Implement it.** Start with **electronics** and **shoes**, then add more types if you have time.
 
-You decide what the type-specific part shows and how it looks. The data has more fields than you need; pick what's useful. You can change any file under `src/app/` except `src/app/dev/`.
+You decide what the type-specific part shows and how it looks. The data has more fields than you need; pick what's useful. You can change any file under `src/` except `src/dev/`.
 
 Talk through your decisions as you go.
 
 ## Running it
 
 - **StackBlitz:** it installs and starts by itself.
-- **Locally:** `npm install`, then `npm start`, and open http://localhost:4200.
+- **Locally:** `npm install`, then `npm run dev`, and open the URL it prints.
 
 ## Where things are
 
 | File | What it does |
 |---|---|
-| `src/app/catalog/mock-data.ts` | **What the API returns.** Look here to see each type's `details`. |
-| `src/app/catalog/product.model.ts` | The `Product` type. Shared fields are typed; `details` is `unknown`. |
-| `src/app/catalog/catalog.service.ts` | Fake API (`GET /api/products`) |
-| `src/app/catalog/catalog.page.ts` | The grid |
-| `src/app/catalog/product-card.*` | The card. Look for `TODO: type-specific details`. |
-| `src/app/shared/cart.service.ts` | Cart (the count in the header) |
+| `src/catalog/mock-data.ts` | **What the API returns.** Look here to see each type's `details`. |
+| `src/catalog/product.model.ts` | The `Product` type. Shared fields are typed; `details` is `unknown`. |
+| `src/catalog/catalog-api.ts` | Fake API (`GET /api/products`) |
+| `src/catalog/CatalogPage.tsx` | The grid |
+| `src/catalog/ProductCard.tsx` | The card. Look for `TODO: type-specific details`. |
+| `src/shared/cart.tsx` | Cart (the count in the header) |
 | `src/styles.css` | Global styles. There are ready-made `.chip`, `.badge` and `.swatch` classes at the top; use them or don't. |
 
-The app uses Angular 21 with standalone components, signals and zoneless change detection.
+The app uses React 19, TypeScript and Vite. There's no state library; use plain React or add what you need.
 
 The **Interviewer tools** box in the corner is for the interviewer. You can ignore it.
