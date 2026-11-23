@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Rating } from '../shared/Rating';
 import { useCart } from '../shared/cart';
+import { detailsComponentFor } from './details/details-registry';
 import type { Product } from './product.model';
 import './ProductCard.css';
 
@@ -12,7 +14,16 @@ function stockLabel(stock: number) {
 export function ProductCard({ product }: { product: Product }) {
   const { add } = useCart();
   const stock = stockLabel(product.stock);
-  const price = new Intl.NumberFormat('en-US', { style: 'currency', currency: product.currency }).format(product.price);
+
+  // What the current selection adds to the base price (e.g. a bigger battery).
+  // The product itself is never changed.
+  const [priceDelta, setPriceDelta] = useState(0);
+  const price = new Intl.NumberFormat('en-US', { style: 'currency', currency: product.currency }).format(
+    product.price + priceDelta,
+  );
+
+  // The type-specific component for this product, looked up in the registry.
+  const Details = detailsComponentFor(product);
 
   return (
     <article className="card">
@@ -27,8 +38,10 @@ export function ProductCard({ product }: { product: Product }) {
 
         <p className="price">{price}</p>
 
-        {/* TODO: type-specific details */}
-        <div className="details"></div>
+        {/* Type-specific details: the registry picks the component; the card is the same for every type. */}
+        <div className="details">
+          <Details product={product} onPriceDeltaChange={setPriceDelta} />
+        </div>
 
         <div className="meta">
           {product.fastDelivery && <span className="fast">Fast delivery · Tomorrow</span>}
